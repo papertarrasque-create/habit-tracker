@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Habit & Mood Tracker</title>
+<title>Habit Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -29,9 +29,6 @@
     --c7: #fca5a5; --c7-glow: rgba(252,165,165,0.4);
     --c8: #5eead4; --c8-glow: rgba(94,234,212,0.4);
     --c9: #fde68a; --c9-glow: rgba(253,230,138,0.4);
-
-    --mood-line: #ff6b8a;
-    --mood-line-glow: rgba(255,107,138,0.5);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -175,14 +172,33 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  .year-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
   .year-badge {
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     padding: 4px 12px;
-    border: 1px solid var(--border-bright);
+    border: 1px solid var(--border);
     border-radius: 100px;
     letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .year-badge:hover {
+    color: var(--text-secondary);
+    border-color: var(--border-bright);
+    background: rgba(255,255,255,0.03);
+  }
+  .year-badge.active {
+    color: #c4b5fd;
+    border-color: rgba(167,139,250,0.3);
+    background: rgba(167,139,250,0.08);
   }
 
   /* Stats bar */
@@ -284,11 +300,10 @@
     background: linear-gradient(90deg, var(--border-bright), transparent);
   }
 
-  /* Habit grid */
+  /* Vertical habit grid */
   .habit-grid {
     width: 100%;
     overflow-x: auto;
-    margin-bottom: 36px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.08) transparent;
   }
@@ -299,51 +314,131 @@
   .habit-table {
     border-collapse: collapse;
     width: 100%;
-    min-width: 920px;
   }
 
-  .habit-table th {
+  /* Header row: day label + habit names + remark */
+  .habit-table thead th {
     font-size: 0.6rem;
-    font-weight: 500;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
     color: var(--text-muted);
-    padding: 6px 0;
+    padding: 10px 6px;
     text-align: center;
-    min-width: 26px;
-    width: 26px;
-    letter-spacing: 0.5px;
+    vertical-align: bottom;
+    position: sticky;
+    top: 0;
+    background: var(--bg-deep);
+    z-index: 2;
   }
-  .habit-table th:first-child {
+  .habit-table thead th:first-child {
     text-align: left;
-    min-width: 170px;
-    width: 170px;
     padding-left: 8px;
+    width: 52px;
+    min-width: 52px;
     color: var(--text-secondary);
+  }
+  .habit-table thead th:last-child {
+    text-align: left;
+    padding-left: 12px;
+    min-width: 200px;
+  }
+  /* Habit name in header — colored */
+  .habit-table thead th .habit-col-name {
+    writing-mode: horizontal-tb;
     font-size: 0.65rem;
-    letter-spacing: 1.5px;
-  }
-
-  .habit-table td {
-    text-align: center;
-    padding: 1px 1px;
-    vertical-align: middle;
-  }
-  .habit-table td:first-child {
-    text-align: left;
-    padding-left: 8px;
-    font-size: 0.82rem;
-    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.5px;
     font-style: italic;
+    cursor: default;
   }
 
-  .habit-table tr {
+  /* Day rows */
+  .habit-table tbody tr {
     border-bottom: 1px solid rgba(255,255,255,0.025);
     transition: background 0.2s;
   }
   .habit-table tbody tr:hover {
     background: rgba(255,255,255,0.015);
   }
-  .habit-table tr.empty-row td { height: 34px; }
-  .habit-table tr.empty-row:hover { background: transparent; }
+  .habit-table tbody tr.today-row {
+    background: rgba(167,139,250,0.04);
+  }
+  .habit-table tbody tr.today-row:hover {
+    background: rgba(167,139,250,0.07);
+  }
+
+  .habit-table td {
+    text-align: center;
+    padding: 3px 6px;
+    vertical-align: middle;
+    height: 36px;
+  }
+  /* Day number cell */
+  .habit-table td:first-child {
+    text-align: left;
+    padding-left: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    width: 52px;
+    min-width: 52px;
+  }
+  .habit-table td:first-child.today-marker {
+    color: #c4b5fd;
+  }
+  .habit-table td:first-child .day-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .habit-table td:first-child .day-weekday {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+    min-width: 22px;
+  }
+  .today-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #a78bfa;
+    display: inline-block;
+    box-shadow: 0 0 6px rgba(167,139,250,0.5);
+  }
+
+  /* Remark cell */
+  .habit-table td:last-child {
+    text-align: left;
+    padding-left: 8px;
+    min-width: 200px;
+  }
+  .remark-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-style: italic;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .remark-input:hover {
+    background: rgba(255,255,255,0.03);
+  }
+  .remark-input:focus {
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+  }
+  .remark-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.4;
+  }
 
   /* Heatmap tiles */
   .dot {
@@ -376,7 +471,7 @@
   }
   .dot.empty:hover { opacity: 1; background: rgba(255,255,255,0.12) !important; }
 
-  /* Color palette — glowing dark mode versions */
+  /* Color palette */
   .color-0 { background: var(--c0); color: var(--c0); --dot-glow: var(--c0-glow); }
   .color-1 { background: var(--c1); color: var(--c1); --dot-glow: var(--c1-glow); }
   .color-2 { background: var(--c2); color: var(--c2); --dot-glow: var(--c2-glow); }
@@ -388,28 +483,7 @@
   .color-8 { background: var(--c8); color: var(--c8); --dot-glow: var(--c8-glow); }
   .color-9 { background: var(--c9); color: var(--c9); --dot-glow: var(--c9-glow); }
 
-  /* Add habit */
-  .add-habit-row td:first-child { font-style: normal !important; }
-  .add-habit-row:hover { background: transparent !important; }
-  .add-habit-btn {
-    background: none;
-    border: 1px dashed rgba(255,255,255,0.1);
-    color: var(--text-muted);
-    padding: 5px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-family: 'DM Sans', sans-serif;
-    letter-spacing: 0.5px;
-    transition: all 0.25s;
-  }
-  .add-habit-btn:hover {
-    border-color: rgba(167,139,250,0.3);
-    color: #a78bfa;
-    background: rgba(167,139,250,0.05);
-  }
-
-  /* Habit name */
+  /* Habit name (horizontal mode) */
   .habit-name {
     cursor: text;
     padding: 3px 6px;
@@ -444,86 +518,78 @@
   .habit-name:hover .delete-habit { display: inline; }
   .delete-habit:hover { color: var(--c0); }
 
-  /* Mood tracker */
-  .mood-section {
-    margin-top: 8px;
-    border-top: 1px solid var(--border);
-    padding-top: 24px;
-  }
-
-  .mood-grid { overflow-x: auto; }
-  .mood-grid::-webkit-scrollbar { height: 6px; }
-  .mood-grid::-webkit-scrollbar-track { background: transparent; }
-  .mood-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-
-  .mood-table {
-    border-collapse: collapse;
-    width: 100%;
-    min-width: 920px;
-  }
-  .mood-table th {
-    font-size: 0.6rem;
-    font-weight: 500;
+  /* Add habit button (horizontal mode) */
+  .add-habit-btn {
+    background: none;
+    border: 1px dashed rgba(255,255,255,0.1);
     color: var(--text-muted);
-    padding: 4px 0;
-    text-align: center;
-    min-width: 28px;
-    width: 28px;
-  }
-  .mood-table th:first-child {
-    min-width: 170px;
-    width: 170px;
-    text-align: left;
-  }
-  .mood-table td {
-    text-align: center;
-    padding: 5px 0;
-    position: relative;
-  }
-  .mood-table td:first-child {
-    text-align: left;
-    font-size: 1.2rem;
-    padding-left: 16px;
-    filter: grayscale(0.2);
-  }
-
-  .mood-cell {
-    width: 28px;
-    height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    padding: 5px 16px;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.75rem;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.5px;
+    transition: all 0.25s;
+  }
+  .add-habit-btn:hover {
+    border-color: rgba(167,139,250,0.3);
+    color: #a78bfa;
+    background: rgba(167,139,250,0.05);
+  }
+
+  /* Habit header management */
+  .habit-col-header {
     position: relative;
+    min-width: 36px;
   }
-
-  .mood-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    transition: all 0.2s ease;
+  .habit-col-header .habit-col-name {
+    cursor: text;
   }
-  .mood-dot.active {
-    width: 11px;
-    height: 11px;
-    background: var(--mood-line);
-    box-shadow: 0 0 12px var(--mood-line-glow);
-  }
-  .mood-cell:hover .mood-dot {
-    background: var(--mood-line);
-    opacity: 0.4;
-  }
-  .mood-cell:hover .mood-dot.active { opacity: 1; }
-
-  /* SVG mood line */
-  .mood-container { position: relative; }
-  .mood-line-svg {
+  .habit-col-actions {
+    display: none;
     position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 1;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30,28,40,0.95);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    padding: 6px;
+    z-index: 10;
+    gap: 4px;
+    flex-direction: column;
+    min-width: 100px;
+  }
+  .habit-col-header:hover .habit-col-actions { display: flex; }
+  .habit-col-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .habit-col-action-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+  }
+  .habit-col-action-btn.danger:hover {
+    background: rgba(255,107,138,0.1);
+    color: var(--c0);
+  }
+
+  /* Add habit column */
+  .add-habit-col {
+    cursor: pointer;
+    transition: color 0.2s;
+    min-width: 36px;
+  }
+  .add-habit-col:hover {
+    color: #a78bfa;
   }
 
   /* View switching */
@@ -546,7 +612,6 @@
     gap: 0;
   }
 
-  /* Column headers */
   .kanban-col-headers {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -566,7 +631,6 @@
     color: var(--text-secondary);
   }
 
-  /* Swimlane */
   .swimlane {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -589,7 +653,6 @@
     border-color: var(--border-bright);
   }
 
-  /* Center column — the habit card */
   .swimlane-col.habit-col {
     align-items: center;
     justify-content: center;
@@ -623,7 +686,6 @@
     font-weight: 700;
   }
 
-  /* Context cards */
   .context-card {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.05);
@@ -663,7 +725,6 @@
   .context-card:hover .context-card-delete { opacity: 1; }
   .context-card-delete:hover { color: var(--c0); }
 
-  /* Add context button */
   .add-context-btn {
     background: none;
     border: 1px dashed rgba(255,255,255,0.08);
@@ -683,7 +744,6 @@
     background: rgba(167,139,250,0.04);
   }
 
-  /* Color accents for habit column top bar */
   .habit-accent-0::before { background: var(--c0); }
   .habit-accent-1::before { background: var(--c1); }
   .habit-accent-2::before { background: var(--c2); }
@@ -694,26 +754,6 @@
   .habit-accent-7::before { background: var(--c7); }
   .habit-accent-8::before { background: var(--c8); }
   .habit-accent-9::before { background: var(--c9); }
-
-  /* Empty state for context columns */
-  .context-empty {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    font-style: italic;
-    text-align: center;
-    padding: 12px 0;
-    opacity: 0.6;
-  }
-
-  /* Arrow indicators between columns */
-  .swimlane-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 1.2rem;
-    opacity: 0.3;
-  }
 
   /* Responsive */
   @media (max-width: 768px) {
@@ -727,6 +767,85 @@
     .kanban-col-headers { grid-template-columns: 1fr; }
     .kanban-col-header { display: none; }
     .swimlane-col.habit-col { order: -1; }
+    .remark-input { min-width: 120px; }
+  }
+
+  /* Layout toggle */
+  .page-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .layout-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .layout-toggle-btn {
+    width: 32px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .layout-toggle-btn:hover {
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+  }
+  .layout-toggle-btn.active {
+    color: #c4b5fd;
+    background: rgba(167,139,250,0.12);
+  }
+  .layout-toggle-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Horizontal layout overrides */
+  .habit-table.horizontal th {
+    text-align: center;
+    min-width: 28px;
+    width: 28px;
+    padding: 6px 0;
+    vertical-align: bottom;
+  }
+  .habit-table.horizontal th:first-child {
+    text-align: left;
+    min-width: 170px;
+    width: 170px;
+    padding-left: 8px;
+  }
+  .habit-table.horizontal td {
+    text-align: center;
+    padding: 1px 1px;
+  }
+  .habit-table.horizontal td:first-child {
+    text-align: left;
+    padding-left: 8px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    width: 170px;
+    min-width: 170px;
+    height: auto;
+  }
+  .habit-table.horizontal {
+    min-width: 920px;
   }
 
   /* Entrance animations */
@@ -738,7 +857,6 @@
   .stats-bar { animation: fadeSlideUp 0.5s ease 0.08s both; }
   .page { animation: fadeSlideUp 0.5s ease 0.16s both; }
 
-  /* Dot pop animation on click */
   @keyframes dotPop {
     0% { transform: scale(0.5); }
     50% { transform: scale(1.4); }
@@ -781,32 +899,32 @@
   <div class="view active" id="viewTracker">
     <div class="container">
       <div class="header">
-        <h1>Habit & Mood Tracker</h1>
-        <span class="year-badge" id="yearBadge"></span>
+        <h1>Habit Tracker</h1>
+        <div class="year-badges" id="yearBadges"></div>
       </div>
 
       <div class="stats-bar" id="statsBar"></div>
 
+      <div class="page-toolbar">
+        <div class="layout-toggle">
+          <button class="layout-toggle-btn active" id="toggleVertical" title="Vertical view" onclick="toggleLayout('vertical')">
+            <svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="4" y2="20"/><line x1="10" y1="4" x2="10" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/></svg>
+          </button>
+          <button class="layout-toggle-btn" id="toggleHorizontal" title="Horizontal view" onclick="toggleLayout('horizontal')">
+            <svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="4"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="4" y1="16" x2="20" y2="16"/></svg>
+          </button>
+        </div>
+      </div>
+
       <div class="page">
         <div class="month-tabs" id="monthTabs"></div>
 
-        <div class="section-title">HABITS</div>
+        <div class="section-title">DAILY LOG</div>
         <div class="habit-grid">
           <table class="habit-table" id="habitTable">
             <thead><tr id="habitHeader"></tr></thead>
             <tbody id="habitBody"></tbody>
           </table>
-        </div>
-
-        <div class="mood-section">
-          <div class="section-title">MOOD TRACKER</div>
-          <div class="mood-container mood-grid">
-            <table class="mood-table" id="moodTable">
-              <thead><tr id="moodHeader"></tr></thead>
-              <tbody id="moodBody"></tbody>
-            </table>
-            <svg class="mood-line-svg" id="moodSvg"></svg>
-          </div>
         </div>
       </div>
     </div>
@@ -832,7 +950,7 @@
 
 <script>
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const MOOD_FACES = ['\u{1F604}','\u{1F642}','\u{1F610}','\u{1F61F}','\u{1F622}'];
+const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const COLORS = 10;
 const COLOR_VALUES = ['#ff6b8a','#d4a5ff','#67e8f9','#6ea8fe','#6ee7b7','#fdba74','#c084fc','#fca5a5','#5eead4','#fde68a'];
 
@@ -844,6 +962,7 @@ function defaultState() {
     currentMonth: now.getMonth(),
     currentYear: now.getFullYear(),
     currentView: 'tracker',
+    trackerLayout: 'vertical',
     habits: [
       { name: '30 min walk', color: 0 },
       { name: 'wake up at 5 AM', color: 1 },
@@ -854,6 +973,7 @@ function defaultState() {
     ],
     habitData: {},
     moodData: {},
+    remarkData: {},
     contextData: {},
   };
 }
@@ -863,7 +983,9 @@ function loadState() {
     const s = JSON.parse(localStorage.getItem('habitTracker'));
     if (s) {
       if (!s.contextData) s.contextData = {};
+      if (!s.remarkData) s.remarkData = {};
       if (!s.currentView) s.currentView = 'tracker';
+      if (!s.trackerLayout) s.trackerLayout = 'vertical';
       return s;
     }
   } catch {}
@@ -892,20 +1014,19 @@ function setHabitChecked(habitIdx, day, val) {
   saveState();
 }
 
-function getMood(day) {
+function getRemark(day) {
   const y = state.currentYear, m = state.currentMonth;
-  const v = state.moodData?.[y]?.[m]?.[day];
-  return v !== undefined ? v : null;
+  return state.remarkData?.[y]?.[m]?.[day] || '';
 }
 
-function setMood(day, moodIdx) {
+function setRemark(day, text) {
   const y = state.currentYear, m = state.currentMonth;
-  if (!state.moodData[y]) state.moodData[y] = {};
-  if (!state.moodData[y][m]) state.moodData[y][m] = {};
-  if (state.moodData[y][m][day] === moodIdx) {
-    delete state.moodData[y][m][day];
+  if (!state.remarkData[y]) state.remarkData[y] = {};
+  if (!state.remarkData[y][m]) state.remarkData[y][m] = {};
+  if (text.trim() === '') {
+    delete state.remarkData[y][m][day];
   } else {
-    state.moodData[y][m][day] = moodIdx;
+    state.remarkData[y][m][day] = text;
   }
   saveState();
 }
@@ -914,6 +1035,18 @@ function getCurrentStreak(habitIdx) {
   const days = daysInMonth(state.currentMonth, state.currentYear);
   let streak = 0;
   for (let d = days; d >= 1; d--) {
+    if (getHabitChecked(habitIdx, d)) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function getStreakAtDay(habitIdx, day) {
+  let streak = 0;
+  for (let d = day; d >= 1; d--) {
     if (getHabitChecked(habitIdx, d)) {
       streak++;
     } else {
@@ -959,9 +1092,16 @@ function switchView(view) {
   document.getElementById('navKanban').classList.toggle('active', view === 'kanban');
 
   if (view === 'kanban') renderKanban();
-  if (view === 'tracker') {
-    render();
-  }
+  if (view === 'tracker') render();
+}
+
+/* Layout toggle */
+function toggleLayout(layout) {
+  state.trackerLayout = layout;
+  saveState();
+  document.getElementById('toggleVertical').classList.toggle('active', layout === 'vertical');
+  document.getElementById('toggleHorizontal').classList.toggle('active', layout === 'horizontal');
+  render();
 }
 
 /* Tracker renders */
@@ -979,7 +1119,19 @@ function renderMonthTabs() {
     };
     container.appendChild(btn);
   });
-  document.getElementById('yearBadge').textContent = state.currentYear;
+  const yearContainer = document.getElementById('yearBadges');
+  yearContainer.innerHTML = '';
+  for (let y = 2026; y <= 2030; y++) {
+    const btn = document.createElement('button');
+    btn.className = 'year-badge' + (y === state.currentYear ? ' active' : '');
+    btn.textContent = y;
+    btn.onclick = () => {
+      state.currentYear = y;
+      saveState();
+      render();
+    };
+    yearContainer.appendChild(btn);
+  }
 }
 
 function renderStats() {
@@ -1012,6 +1164,123 @@ function renderStats() {
 }
 
 function renderHabits() {
+  const isHorizontal = state.trackerLayout === 'horizontal';
+  const table = document.getElementById('habitTable');
+  table.className = 'habit-table' + (isHorizontal ? ' horizontal' : '');
+
+  if (isHorizontal) {
+    renderHabitsHorizontal();
+  } else {
+    renderHabitsVertical();
+  }
+}
+
+function renderHabitsVertical() {
+  const days = daysInMonth(state.currentMonth, state.currentYear);
+  const now = new Date();
+  const isCurrentMonth = state.currentMonth === now.getMonth() && state.currentYear === now.getFullYear();
+  const today = now.getDate();
+
+  const header = document.getElementById('habitHeader');
+  header.innerHTML = '<th>DAY</th>';
+
+  state.habits.forEach((habit, hi) => {
+    const th = document.createElement('th');
+    th.className = 'habit-col-header';
+    const colorIdx = habit.color % COLORS;
+    th.innerHTML = `
+      <span class="habit-col-name" style="color: ${COLOR_VALUES[colorIdx]}">${habit.name}</span>
+      <div class="habit-col-actions">
+        <button class="habit-col-action-btn" data-action="rename" data-hi="${hi}">Rename</button>
+        <button class="habit-col-action-btn danger" data-action="delete" data-hi="${hi}">Delete</button>
+      </div>`;
+    th.querySelector('[data-action="rename"]').onclick = (e) => {
+      e.stopPropagation();
+      const newName = prompt('Rename habit:', habit.name);
+      if (newName && newName.trim()) {
+        state.habits[hi].name = newName.trim();
+        saveState();
+        render();
+      }
+    };
+    th.querySelector('[data-action="delete"]').onclick = (e) => {
+      e.stopPropagation();
+      state.habits.splice(hi, 1);
+      saveState();
+      render();
+    };
+    header.appendChild(th);
+  });
+
+  const addTh = document.createElement('th');
+  addTh.className = 'add-habit-col';
+  addTh.textContent = '+';
+  addTh.title = 'Add habit';
+  addTh.onclick = () => {
+    state.habits.push({ name: 'new habit', color: state.habits.length % COLORS });
+    saveState();
+    render();
+  };
+  header.appendChild(addTh);
+
+  const remarkTh = document.createElement('th');
+  remarkTh.textContent = 'REMARK';
+  header.appendChild(remarkTh);
+
+  const body = document.getElementById('habitBody');
+  body.innerHTML = '';
+
+  for (let d = 1; d <= days; d++) {
+    const tr = document.createElement('tr');
+    const isToday = isCurrentMonth && d === today;
+    if (isToday) tr.className = 'today-row';
+
+    const dayTd = document.createElement('td');
+    if (isToday) dayTd.className = 'today-marker';
+    const dateObj = new Date(state.currentYear, state.currentMonth, d);
+    const weekday = WEEKDAYS[dateObj.getDay()];
+    dayTd.innerHTML = `<div class="day-label"><span class="day-weekday">${weekday}</span>${d}${isToday ? ' <span class="today-dot"></span>' : ''}</div>`;
+    tr.appendChild(dayTd);
+
+    state.habits.forEach((habit, hi) => {
+      const td = document.createElement('td');
+      const checked = getHabitChecked(hi, d);
+      const streak = checked ? getStreakAtDay(hi, d) : 0;
+      const intensity = checked ? (streak >= 7 ? 4 : streak >= 4 ? 3 : streak >= 2 ? 2 : 1) : 0;
+      const dot = document.createElement('span');
+      dot.className = `dot color-${habit.color % COLORS} ${checked ? 'filled intensity-' + intensity : 'empty'}`;
+      dot.onclick = () => {
+        setHabitChecked(hi, d, !checked);
+        if (!checked) {
+          dot.classList.add('just-filled');
+          setTimeout(() => dot.classList.remove('just-filled'), 300);
+        }
+        render();
+      };
+      td.appendChild(dot);
+      tr.appendChild(td);
+    });
+
+    const plusTd = document.createElement('td');
+    tr.appendChild(plusTd);
+
+    const remarkTd = document.createElement('td');
+    const remarkInput = document.createElement('input');
+    remarkInput.type = 'text';
+    remarkInput.className = 'remark-input';
+    remarkInput.value = getRemark(d);
+    remarkInput.placeholder = isToday ? 'how was today?' : '';
+    remarkInput.onchange = () => {
+      setRemark(d, remarkInput.value);
+    };
+    remarkTd.appendChild(remarkInput);
+    tr.appendChild(remarkTd);
+
+    body.appendChild(tr);
+  }
+}
+
+function renderHabitsHorizontal() {
   const days = daysInMonth(state.currentMonth, state.currentYear);
 
   const header = document.getElementById('habitHeader');
@@ -1049,18 +1318,13 @@ function renderHabits() {
     for (let d = 1; d <= days; d++) {
       const td = document.createElement('td');
       const checked = getHabitChecked(hi, d);
-      if (checked) {
-        streak++;
-      } else {
-        streak = 0;
-      }
+      if (checked) { streak++; } else { streak = 0; }
       const intensity = checked ? (streak >= 7 ? 4 : streak >= 4 ? 3 : streak >= 2 ? 2 : 1) : 0;
       const dot = document.createElement('span');
       dot.className = `dot color-${habit.color % COLORS} ${checked ? 'filled intensity-' + intensity : 'empty'}`;
       dot.onclick = () => {
-        const willCheck = !checked;
-        setHabitChecked(hi, d, willCheck);
-        if (willCheck) {
+        setHabitChecked(hi, d, !checked);
+        if (!checked) {
           dot.classList.add('just-filled');
           setTimeout(() => dot.classList.remove('just-filled'), 300);
         }
@@ -1072,16 +1336,8 @@ function renderHabits() {
     body.appendChild(tr);
   });
 
-  const emptyCount = Math.max(0, 10 - state.habits.length - 1);
-  for (let i = 0; i < emptyCount; i++) {
-    const tr = document.createElement('tr');
-    tr.className = 'empty-row';
-    tr.innerHTML = `<td></td>${'<td></td>'.repeat(days)}`;
-    body.appendChild(tr);
-  }
-
+  // Add habit row
   const addTr = document.createElement('tr');
-  addTr.className = 'add-habit-row';
   const addTd = document.createElement('td');
   addTd.colSpan = days + 1;
   const addBtn = document.createElement('button');
@@ -1095,121 +1351,6 @@ function renderHabits() {
   addTd.appendChild(addBtn);
   addTr.appendChild(addTd);
   body.appendChild(addTr);
-}
-
-function renderMood() {
-  const days = daysInMonth(state.currentMonth, state.currentYear);
-
-  const header = document.getElementById('moodHeader');
-  header.innerHTML = '<th></th>';
-  for (let d = 1; d <= days; d++) {
-    header.innerHTML += `<th>${d}</th>`;
-  }
-
-  const body = document.getElementById('moodBody');
-  body.innerHTML = '';
-
-  MOOD_FACES.forEach((face, mi) => {
-    const tr = document.createElement('tr');
-    const faceTd = document.createElement('td');
-    faceTd.textContent = face;
-    tr.appendChild(faceTd);
-
-    for (let d = 1; d <= days; d++) {
-      const td = document.createElement('td');
-      const cell = document.createElement('div');
-      cell.className = 'mood-cell';
-      const dot = document.createElement('div');
-      const current = getMood(d);
-      dot.className = 'mood-dot' + (current === mi ? ' active' : '');
-      cell.appendChild(dot);
-      cell.onclick = () => {
-        setMood(d, mi);
-        render();
-      };
-      td.appendChild(cell);
-      tr.appendChild(td);
-    }
-    body.appendChild(tr);
-  });
-
-  requestAnimationFrame(() => drawMoodLine(days));
-}
-
-function drawMoodLine(days) {
-  const svg = document.getElementById('moodSvg');
-  const table = document.getElementById('moodTable');
-  if (!table) return;
-
-  svg.setAttribute('width', table.offsetWidth);
-  svg.setAttribute('height', table.offsetHeight);
-  svg.innerHTML = '';
-
-  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-  const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-  filter.setAttribute('id', 'glow');
-  const blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
-  blur.setAttribute('stdDeviation', '3');
-  blur.setAttribute('result', 'coloredBlur');
-  const merge = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge');
-  const mergeNode1 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
-  mergeNode1.setAttribute('in', 'coloredBlur');
-  const mergeNode2 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
-  mergeNode2.setAttribute('in', 'SourceGraphic');
-  merge.appendChild(mergeNode1);
-  merge.appendChild(mergeNode2);
-  filter.appendChild(blur);
-  filter.appendChild(merge);
-  defs.appendChild(filter);
-  svg.appendChild(defs);
-
-  const points = [];
-  for (let d = 1; d <= days; d++) {
-    const mood = getMood(d);
-    if (mood === null) continue;
-
-    const row = table.querySelectorAll('tbody tr')[mood];
-    if (!row) continue;
-    const cell = row.querySelectorAll('td')[d];
-    if (!cell) continue;
-
-    const dot = cell.querySelector('.mood-dot.active');
-    if (!dot) continue;
-
-    const rect = dot.getBoundingClientRect();
-    const tableRect = table.getBoundingClientRect();
-    points.push({
-      x: rect.left + rect.width / 2 - tableRect.left,
-      y: rect.top + rect.height / 2 - tableRect.top
-    });
-  }
-
-  if (points.length < 2) return;
-
-  let pathD = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[Math.max(i - 1, 0)];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[Math.min(i + 2, points.length - 1)];
-
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-    pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
-  }
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', pathD);
-  path.setAttribute('stroke', 'var(--mood-line)');
-  path.setAttribute('stroke-width', '2');
-  path.setAttribute('fill', 'none');
-  path.setAttribute('filter', 'url(#glow)');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.appendChild(path);
 }
 
 /* Kanban render */
@@ -1227,16 +1368,13 @@ function renderKanban() {
     const lane = document.createElement('div');
     lane.className = 'swimlane';
 
-    // Before column
     const beforeCol = document.createElement('div');
     beforeCol.className = 'swimlane-col';
     renderContextCards(beforeCol, hi, 'before', beforeItems);
     lane.appendChild(beforeCol);
 
-    // Habit column (center)
     const habitCol = document.createElement('div');
     habitCol.className = `swimlane-col habit-col habit-accent-${colorIdx}`;
-
     const nameEl = document.createElement('div');
     nameEl.className = 'habit-card-name';
     nameEl.textContent = habit.name;
@@ -1251,10 +1389,8 @@ function renderKanban() {
       streakEl.textContent = 'no active streak';
     }
     habitCol.appendChild(streakEl);
-
     lane.appendChild(habitCol);
 
-    // After column
     const afterCol = document.createElement('div');
     afterCol.className = 'swimlane-col';
     renderContextCards(afterCol, hi, 'after', afterItems);
@@ -1268,13 +1404,11 @@ function renderContextCards(container, habitIdx, side, items) {
   items.forEach((text, itemIdx) => {
     const card = document.createElement('div');
     card.className = 'context-card';
-
     const input = document.createElement('input');
     input.value = text;
     input.onchange = () => {
       updateContextItem(habitIdx, side, itemIdx, input.value);
     };
-
     const delBtn = document.createElement('button');
     delBtn.className = 'context-card-delete';
     delBtn.innerHTML = '&times;';
@@ -1282,7 +1416,6 @@ function renderContextCards(container, habitIdx, side, items) {
       deleteContextItem(habitIdx, side, itemIdx);
       renderKanban();
     };
-
     card.appendChild(input);
     card.appendChild(delBtn);
     container.appendChild(card);
@@ -1294,7 +1427,6 @@ function renderContextCards(container, habitIdx, side, items) {
   addBtn.onclick = () => {
     addContextItem(habitIdx, side, 'new activity');
     renderKanban();
-    // Focus the new input
     const inputs = container.querySelectorAll('.context-card input');
     if (inputs.length > 0) {
       const last = inputs[inputs.length - 1];
@@ -1309,18 +1441,13 @@ function render() {
   renderMonthTabs();
   renderStats();
   renderHabits();
-  renderMood();
 }
 
-// Initialize correct view
-switchView(state.currentView || 'tracker');
+// Sync layout toggle buttons on load
+document.getElementById('toggleVertical').classList.toggle('active', state.trackerLayout === 'vertical');
+document.getElementById('toggleHorizontal').classList.toggle('active', state.trackerLayout === 'horizontal');
 
-window.addEventListener('resize', () => {
-  if (state.currentView === 'tracker') {
-    const days = daysInMonth(state.currentMonth, state.currentYear);
-    drawMoodLine(days);
-  }
-});
+switchView(state.currentView || 'tracker');
 </script>
 </body>
 </html>
